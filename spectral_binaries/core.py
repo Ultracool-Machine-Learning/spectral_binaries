@@ -28,13 +28,16 @@ from sklearn.ensemble import RandomForestRegressor
 # -----------------------------------------------------------------------------------------------------
 
 
-VERSION = "2023.03.13"
+VERSION = "2023.08.01"
 __version__ = VERSION
 GITHUB_URL = "https://github.com/Ultracool-Machine-Learning/spectral_binaries"
 CODE_PATH = os.path.dirname(os.path.abspath(__file__))
 DATA_FOLDER = CODE_PATH + "/../data/"
 ERROR_CHECKING = False
-VEGAFILE = "vega_kurucz.txt"
+#VEGAFILE = "vega_kurucz.txt"
+STANDARDS_FILE = 'standards_230801.h5'
+SINGLES_FILE = 'singles_230801.h5'
+#BINARIES_FILE = TBD
 
 
 # Display on load in.
@@ -44,248 +47,123 @@ print("You are currently using version {}\n".format(VERSION))
 # print('If you make use of any features of this toolkit for your research, please remember to cite the paper:')
 # print('\n{}; Bibcode: {}\n'.format(CITATION,BIBCODE))
 print(
-    "Please report any errors are feature requests to our GitHub page, {}\n\n".format(
+    "Please report any errors are feature requests to our GitHub page:\n{}\n\n".format(
         GITHUB_URL
     )
 )
 
 
-# Constants and information.
+################## CONSTANTS ##################
 
 absmag_relations = {
-    "filippazzo2015": {
-        "sptoffset": 10,
-        "filters": {
-            "2MASS_J": {
-                "fitunc": 0.4,
-                "range": [16.0, 39.0],
-                "coeff": [3.478e-05, -0.002684, 0.07771, -1.058, 7.157, -8.35],
-            },
-            "WISE_W2": {
-                "fitunc": 0.4,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    8.19e-06,
-                    -0.0006938,
-                    0.02283,
-                    -0.3655,
-                    3.032,
-                    -0.5043,
-                ],
-            },
-        },
-    },
-    "dupuy2012": {
-        "sptoffset": 10,
-        "filters": {
-            "MKO_Y": {
-                "fitunc": 0.4,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    -2.52638e-06,
-                    0.000285027,
-                    -0.0126151,
-                    0.279438,
-                    -3.26895,
-                    19.5444,
-                    -35.156,
-                ],
-            },
-            "MKO_J": {
-                "fitunc": 0.39,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    -1.9492e-06,
-                    0.000227641,
-                    -0.0103332,
-                    0.232771,
-                    -2.74405,
-                    16.3986,
-                    -28.3129,
-                ],
-            },
-            "MKO_H": {
-                "fitunc": 0.38,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    -2.24083e-06,
-                    0.000251601,
-                    -0.011096,
-                    0.245209,
-                    -2.85705,
-                    16.9138,
-                    -29.7306,
-                ],
-            },
-            "MKO_K": {
-                "fitunc": 0.4,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    -1.04935e-06,
-                    0.000125731,
-                    -0.00584342,
-                    0.135177,
-                    -1.6393,
-                    10.1248,
-                    -15.22,
-                ],
-            },
-            "MKO_LP": {
-                "fitunc": 0.28,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    0.0,
-                    0.0,
-                    5.46366e-05,
-                    -0.00293191,
-                    0.0530581,
-                    -0.196584,
-                    8.89928,
-                ],
-            },
-            "2MASS_J": {
-                "fitunc": 0.4,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    -7.84614e-07,
-                    0.00010082,
-                    -0.00482973,
-                    0.111715,
-                    -1.33053,
-                    8.16362,
-                    -9.67994,
-                ],
-            },
-            "2MASS_H": {
-                "fitunc": 0.4,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    -1.11499e-06,
-                    0.000129363,
-                    -0.00580847,
-                    0.129202,
-                    -1.5037,
-                    9.00279,
-                    -11.7526,
-                ],
-            },
-            "2MASS_KS": {
-                "fitunc": 0.43,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    0.000106693,
-                    -0.00642118,
-                    0.134163,
-                    -0.867471,
-                    11.0114,
-                ],
-            },
-            "IRAC_CH1": {
-                "fitunc": 0.29,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    6.50191e-05,
-                    -0.00360108,
-                    0.0691081,
-                    -0.335222,
-                    9.3422,
-                ],
-            },
-            "IRAC_CH2": {
-                "fitunc": 0.22,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    5.82107e-05,
-                    -0.00363435,
-                    0.0765343,
-                    -0.439968,
-                    9.73946,
-                ],
-            },
-            "IRAC_CH3": {
-                "fitunc": 0.32,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    0.000103507,
-                    -0.00622795,
-                    0.129019,
-                    -0.90182,
-                    11.0834,
-                ],
-            },
-            "IRAC_CH4": {
-                "fitunc": 0.27,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    6.89733e-05,
-                    -0.00412294,
-                    0.0843465,
-                    -0.529595,
-                    9.97853,
-                ],
-            },
-            "WISE_W1": {
-                "fitunc": 0.39,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    1.5804e-05,
-                    -0.000333944,
-                    -0.00438105,
-                    0.355395,
-                    7.14765,
-                ],
-            },
-            "WISE_W2": {
-                "fitunc": 0.35,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    1.78555e-05,
-                    -0.000881973,
-                    0.0114325,
-                    0.192354,
-                    7.46564,
-                ],
-            },
-            "WISE_W3": {
-                "fitunc": 0.43,
-                "range": [16.0, 39.0],
-                "coeff": [
-                    2.37656e-05,
-                    -0.00128563,
-                    0.020174,
-                    0.0664242,
-                    7.81181,
-                ],
-            },
-            "WISE_W4": {
-                "fitunc": 0.76,
-                "range": [16.0, 39.0],
-                "coeff": [-0.00216042, 0.11463, 7.78974],
-            },
-        },
-    },
-}
+    'filippazzo2015': {'altname': ['filippazzo','filippazzo15','fillippazzo','filipazo','filippazo','fil15'],'bibcode': '2015ApJ...810..158F', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        '2MASS_J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [3.478e-5, -2.684e-3, 7.771e-2, -1.058, 7.157, -8.350]}, 
+    }},
+    'dupuy2012': {'altname': ['dupuy','dupuy12','dup12'], 'bibcode': '2012ApJS..201...19D', 'sptoffset': 10, 'method': 'polynomial', 'filters': {
+        'MKO_J': {'fitunc' : 0.39, 'range' : [16., 39.], 'coeff' : [-.00000194920, .000227641, -.0103332, .232771, -2.74405, 16.3986, -28.3129]}, 
+        'MKO_H': {'fitunc': 0.38, 'range' : [16., 39.], 'coeff': [-.00000224083, .000251601, -.0110960, .245209, -2.85705, 16.9138, -29.7306]}, 
+        'MKO_K': {'fitunc': 0.40, 'range' : [16., 39.], 'coeff': [-.00000104935, .000125731, -.00584342, .135177, -1.63930, 10.1248, -15.2200]}, 
+        '2MASS_J': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [-.000000784614, .000100820, -.00482973, .111715, -1.33053, 8.16362, -9.67994]}, 
+        '2MASS_H': {'fitunc': 0.40, 'range': [16., 39.], 'coeff': [-.00000111499, .000129363, -.00580847, .129202, -1.50370, 9.00279, -11.7526]}, 
+        '2MASS_KS': {'fitunc': 0.43, 'range':[16., 39.], 'coeff': [1.06693e-4, -6.42118e-3, 1.34163e-1, -8.67471e-1, 1.10114e1]}, 
+    }}}
 
-# read in standards
-df = pd.read_hdf(DATA_FOLDER + "standards.h5")
-STANDARDS = {
-    "WAVE": df["WAVEGRID"].iloc[0],
-    "SPT": df["SPT"],
-    "FLUX": df["FLUX"],
-    "UNC": df["UNCERTAINTY"],
-}
-wavegrid = STANDARDS["WAVE"]
-# STANDARDS = {'WAVE': df['wavegrid'].iloc[0],'STDS':{}}
-# for i in range(len(df)): STANDARDS['STDS'][df['sptype'].iloc[i]] = df['interpolated_flux'].iloc[i]
+
+################## INITIALIZE SPECTRAL TEMPLATES ##################
+
+# NOTE: WILL NEED TO FIX THE WAVEGRID VARIABLE
+
+WAVEGRID = []
+STANDARDS = {}
+SINGLES = {}
+BINARIES = {}
+
+def initialize_templates(file='',container={},verbose=False,wcol='WAVE',fcol='FLUX',ucol='UNCERTAINTY',lcol='LABEL',additional=[]):
+    if os.path.exists(file) == False: raise ValueError('Cannot find data file {}'.format(file))
+    if file.split('.')[-1]=='h5': df = pd.read_hdf(file)
+    elif 'xls' in file.split('.')[-1]: df = pd.read_excel(file)
+    elif 'csv' in file.split('.')[-1]: df = pd.read_ascii(file,delim=',')
+    elif 'txt' in file.split('.')[-1]: df = pd.read_ascii(file,delim='\s+')
+    else: raise ValueError('Do not recognize file format for {} - should be h5,xls/xlsx,csv, or txt'.format(file))
+
+    for cname in [fcol,ucol,lcol,wcol]:
+        if cname not in list(df.columns): raise ValueError('Cannot find column {} in file'.format(cname))
+    container['WAVE'] = df[wcol].iloc[0]
+    container['FLUX'] = df[fcol]
+    container['UNCERTAINTY'] = df[ucol]
+    container['LABEL'] = df[lcol]
+    if len(additional)>0:
+        for a in additional:
+            if a in list(df.columns): container[a] = df[a]
+
+    return
+
+def initialize_standards():
+    initialize_templates(file=DATA_FOLDER+STANDARDS_FILE,container=STANDARDS,lcol='SPT')
+    return
+
+def initialize_singles():
+    initialize_templates(file=DATA_FOLDER+SINGLES_FILE,container=SINGLES,lcol='SPT')
+    return
+
+# WRITE WHEN WE HAVE A BINARIES FILE UPLOADED
+# def initialize_binaries():
+#     BINARIES = initialize_templates(file=DATA_FOLDER+BINARIES_FILE)
+
+
+
+# NOTE: THIS FUNCTION IS PROBLEMATIC AS IT RELIES ON FILES NOT INCLUDED IN DISTRIBUTION
+# BETTER TO USE ABOVE FUNCTION FOR A GENERAL FILE
+# def initialize_binaries():
+#     bina_df = pd.read_hdf(r'C:/Users/juand/Research/h5_files/spectral_templates_aug3_normalized.h5', key='binaries')
+#     b_wavegrid = np.array(pd.read_hdf(r'C:/Users/juand/Research/h5_files/spectral_templates_aug3_normalized.h5', key='wavegrid'))
+#     interpol_flux=[]
+#     for j in range(len(bina_df)):
+#         a=[]
+#         for i in range(409):
+#             a.append(bina_df["flux_" + str(i)][j])
+#         interpol_flux.append(a)
+#     bina_df["interpol_flux"]=interpol_flux
+#     bina_df = bina_df.loc[bina_df['primary_type']<=bina_df['secondary_type']]
+#     bina_df = bina_df.reset_index(drop=True)
+#     new_wave=wavegrid
+#     new_wave[-1]=b_wavegrid[-1]
+#     fluxlist=[]
+#     for i in range(len(bina_df)):
+#         fluxi=bina_df['interpol_flux'][i]
+#         nfluxi = interpolate_flux_wave(b_wavegrid, fluxi, wgrid=new_wave)
+#         fluxlist.append(nfluxi)
+#     bina_df['FLUX']=fluxlist    
+#     BINARIES = {
+#         "WAVE": wavegrid,
+#         "PRIM": bina_df["primary_type"],
+#         "SECO": bina_df["secondary_type"],
+#         "FLUX": bina_df["FLUX"],
+#     }
+#     return
+
+
+# REMOVED AND PUT INTO INITIALIZE FUNCTION
+# # read in standards
+# df = pd.read_hdf(DATA_FOLDER + "standards.h5")
+# STANDARDS = {
+#     "WAVE": df["WAVEGRID"].iloc[0],
+#     "SPT": df["SPT"],
+#     "FLUX": df["FLUX"],
+#     "UNC": df["UNCERTAINTY"],
+# }
+# wavegrid = STANDARDS["WAVE"]
+# # STANDARDS = {'WAVE': df['wavegrid'].iloc[0],'STDS':{}}
+# # for i in range(len(df)): STANDARDS['STDS'][df['sptype'].iloc[i]] = df['interpolated_flux'].iloc[i]
 
 # needed for binariesClassificationPrecision function
+# ADAM - THIS NEEDS TO BE PUT INTO THAT SCRIPT, NOT HERE
 dic_b = {'primary_type': [i for i in list(range(16,40)) for j in range(16,40)],
          'secondary_type': [i for j in range(16,40) for i in list(range(16,40))]}
 types_df = pd.DataFrame(dic_b)
 types_df = types_df.loc[types_df['primary_type']<=types_df['secondary_type']].reset_index(drop=True)
 types_count = types_df.groupby('secondary_type').primary_type.value_counts().unstack()
 
-BINARIES = {}
 
 # Basic spectral analysis functions.
 
@@ -295,10 +173,6 @@ def interpolate_flux_wave(
     wave: Sequence, flux: Sequence, wgrid: Sequence, verbose: bool = True
 ):
     """
-    filterMag function requires interpolation to different wavelengths.
-
-    Function to interpolate the flux from the stars to the wavegrid we are working on.
-
     Parameters
     ----------
     wave : Sequence
@@ -492,33 +366,6 @@ def typeToNum(inp):
 #         chi.append(chisquared)
 #     return standard_types[np.argmin(chi)]
 
-def initialize_binaries():
-    bina_df = pd.read_hdf(r'C:/Users/juand/Research/h5_files/spectral_templates_aug3_normalized.h5', key='binaries')
-    b_wavegrid = np.array(pd.read_hdf(r'C:/Users/juand/Research/h5_files/spectral_templates_aug3_normalized.h5', key='wavegrid'))
-    interpol_flux=[]
-    for j in range(len(bina_df)):
-        a=[]
-        for i in range(409):
-            a.append(bina_df["flux_" + str(i)][j])
-        interpol_flux.append(a)
-    bina_df["interpol_flux"]=interpol_flux
-    bina_df = bina_df.loc[bina_df['primary_type']<=bina_df['secondary_type']]
-    bina_df = bina_df.reset_index(drop=True)
-    new_wave=wavegrid
-    new_wave[-1]=b_wavegrid[-1]
-    fluxlist=[]
-    for i in range(len(bina_df)):
-        fluxi=bina_df['interpol_flux'][i]
-        nfluxi = interpolate_flux_wave(b_wavegrid, fluxi, wgrid=new_wave)
-        fluxlist.append(nfluxi)
-    bina_df['FLUX']=fluxlist    
-    BINARIES = {
-        "WAVE": wavegrid,
-        "PRIM": bina_df["primary_type"],
-        "SECO": bina_df["secondary_type"],
-        "FLUX": bina_df["FLUX"],
-    }
-    return
 
 
 ## NOTE: NEED OPTIONAL PLOTTING, ALSO RETURN NOT JUST SPT BUT ALSO SCALE FACTOR AND CHI2
@@ -589,8 +436,8 @@ def fast_classify(
         msk[
             np.where(
                 np.logical_or(
-                    np.logical_and(wavegrid > 1.35, wavegrid < 1.42),
-                    np.logical_and(wavegrid > 1.8, wavegrid < 1.95),
+                    np.logical_and(WAVEGRID > 1.35, WAVEGRID < 1.42),
+                    np.logical_and(WAVEGRID > 1.8, WAVEGRID < 1.95),
                 )
             )
         ] = 0
@@ -1112,14 +959,14 @@ def filterMag(flux, unc, filt):
     fwave, ftrans = filterProfile(filt)
 
     # check that spectrum and filter cover the same wavelength ranges
-    if np.nanmax(fwave) < np.nanmin(wavegrid) or np.nanmin(fwave) > np.nanmax(
-        wavegrid
+    if np.nanmax(fwave) < np.nanmin(WAVEGRID) or np.nanmin(fwave) > np.nanmax(
+        WAVEGRID
     ):
         print("\nWarning: no overlap between spectrum and filter")
         return np.nan, np.nan
 
-    if np.nanmin(fwave) < np.nanmin(wavegrid) or np.nanmax(fwave) > np.nanmax(
-        wavegrid
+    if np.nanmin(fwave) < np.nanmin(WAVEGRID) or np.nanmax(fwave) > np.nanmax(
+        WAVEGRID
     ):
         print(
             "\nWarning: spectrum does not span full filter profile for the filter"
@@ -1127,12 +974,12 @@ def filterMag(flux, unc, filt):
 
     # interpolate spectrum onto filter wavelength function
     wgood = np.where(~np.isnan(unc))
-    if len(wavegrid[wgood]) > 0:
+    if len(WAVEGRID[wgood]) > 0:
         d = interpolate_flux_wave(
-            wavegrid[wgood], flux[wgood], wgrid=fwave
+            WAVEGRID[wgood], flux[wgood], wgrid=fwave
         )  # ,bounds_error=False,fill_value=0.
         n = interpolate_flux_wave(
-            wavegrid[wgood], unc[wgood], wgrid=fwave
+            WAVEGRID[wgood], unc[wgood], wgrid=fwave
         )  # ,bounds_error=False,fill_value=0.
     # catch for models
     else:
@@ -1166,7 +1013,7 @@ def filterMag(flux, unc, filt):
         )
 
     err = np.nanstd(result)
-    if len(wavegrid[wgood]) == 0:
+    if len(WAVEGRID[wgood]) == 0:
         err = 0.0
     return val, err
 
@@ -1241,8 +1088,8 @@ def combine_two_spex_spectra(flux1, unc1, flux2, unc2, name1="", name2=""):
     """
 
     # Classify the given spectra
-    spt1 = fast_classify(wavegrid, flux1, unc1)
-    spt2 = fast_classify(wavegrid, flux2, unc2)
+    spt1 = fast_classify(WAVEGRID, flux1, unc1)
+    spt2 = fast_classify(WAVEGRID, flux2, unc2)
 
     # # get magnitudes of types
     # absj1 = typeToMag(spt1)[0]
@@ -1257,7 +1104,7 @@ def combine_two_spex_spectra(flux1, unc1, flux2, unc2, name1="", name2=""):
     unc3 = unc1 + unc2
 
     # Classify Result
-    spt3 = fast_classify(wavegrid, flux3, unc3)
+    spt3 = fast_classify(WAVEGRID, flux3, unc3)
 
 
 # FIX
@@ -1266,9 +1113,9 @@ def combine_two_spex_spectra(flux1, unc1, flux2, unc2, name1="", name2=""):
     unc_standard = STANDARDS["UNC"][spt3 - 10]
 
     # normalize
-    flux1, unc1 = normalize(wavegrid, flux1, unc1)
-    flux2, unc2 = normalize(wavegrid, flux2, unc2)
-    flux3, unc3 = normalize(wavegrid, flux3, unc3)
+    flux1, unc1 = normalize(WAVEGRID, flux1, unc1)
+    flux2, unc2 = normalize(WAVEGRID, flux2, unc2)
+    flux3, unc3 = normalize(WAVEGRID, flux3, unc3)
 
     # diff
     diff = flux_standard - flux3
@@ -1281,18 +1128,19 @@ def combine_two_spex_spectra(flux1, unc1, flux2, unc2, name1="", name2=""):
         "secondary_type": spt2,
         "system_type": spt3,
         "system_interpolated_flux": interpolate_flux_wave(
-            wavegrid, flux3
+            WAVEGRID, flux3
         ).flatten(),
         "system_interpolated_noise": interpolate_flux_wave(
-            wavegrid, unc3
+            WAVEGRID, unc3
         ).flatten(),
         "difference_spectrum": interpolate_flux_wave(
-            wavegrid, np.abs(diff)
+            WAVEGRID, np.abs(diff)
         ).flatten(),
         "name": name,
     }
 
 
+# THIS NEEDS TO BE FIXED TO ADAPT TO NEW TEMPLATES FORMAT
 def makeBinaryTemplates(stars_df: pd.DataFrame) -> pd.DataFrame:
     """Function to make binaries.
 
@@ -1333,7 +1181,7 @@ def makeBinaryTemplates(stars_df: pd.DataFrame) -> pd.DataFrame:
             binary_diff.append(binary_dict["difference_spectrum"])
             binary_flux.append(binary_dict["system_interpolated_flux"])
             binary_unce.append(binary_dict["system_interpolated_noise"])
-            binary_wave.append(stars_df.wavegrid[star1])
+            binary_wave.append(stars_df.WAVEGRID[star1])
             binary_type.append(binary_dict["system_type"])
             primar_type.append(binary_dict["primary_type"])
             second_type.append(binary_dict["secondary_type"])
@@ -1584,7 +1432,7 @@ def _addstars(df, target, mintype='', maxtype=38, undersample=False, undersample
                     nflux, nunc = addNoise(flux, unc, scale=noisescale)
                     nan_and_zeros = (len(nunc)-np.count_nonzero(nunc)) + (len(nunc)-np.count_nonzero(~np.isnan(nunc)))
                 nunc = np.abs(nunc)
-                snr = measureSN(wavegrid, nflux, nunc)
+                snr = measureSN(WAVEGRID, nflux, nunc)
                 new_df.loc[len(new_df.index)] = [nflux, nunc, snr, singles_snr.SPT[star], singles_snr.WAVEGRID[star], singles_snr.SPT_NUM[star], 'hig'] 
                 need -= 1
         
@@ -1610,7 +1458,7 @@ def _addstars(df, target, mintype='', maxtype=38, undersample=False, undersample
                     nflux, nunc = addNoise(flux, unc, scale=noisescale)
                     nan_and_zeros = (len(nunc)-np.count_nonzero(nunc)) + (len(nunc)-np.count_nonzero(~np.isnan(nunc)))
                 nunc = np.abs(nunc)
-                snr = measureSN(wavegrid, nflux, nunc)
+                snr = measureSN(WAVEGRID, nflux, nunc)
                 new_df.loc[len(new_df.index)] = [nflux, nunc, snr, singles_snr.SPT[star], singles_snr.WAVEGRID[star], singles_snr.SPT_NUM[star], 'mid'] 
                 need -= 1
         
@@ -1640,7 +1488,7 @@ def _addstars(df, target, mintype='', maxtype=38, undersample=False, undersample
                     nflux, nunc = addNoise(flux, unc, scale=noisescale)
                     nunc = np.abs(nunc)
                     nan_and_zeros = (len(nunc)-np.count_nonzero(nunc)) + (len(nunc)-np.count_nonzero(~np.isnan(nunc)))
-                snr = measureSN(wavegrid, nflux, nunc)
+                snr = measureSN(WAVEGRID, nflux, nunc)
                 new_df.loc[len(new_df)] = [nflux, nunc, snr, singles_snr.SPT[star], singles_snr.WAVEGRID[star], singles_snr.SPT_NUM[star], 'low'] 
                 need -= 1
     
@@ -1753,7 +1601,7 @@ def binaryCreation(singles_df, target, snr_range='low', fluxSeparate=False, diff
                     combstar_dic = combine_two_spex_spectra(flux1, unc1, flux2, unc2)
                     flux3 = np.array(combstar_dic["system_interpolated_flux"])
                     unc3  = np.array(combstar_dic["system_interpolated_noise"])
-                    snr3 = measureSN(wavegrid, flux3, unc3)
+                    snr3 = measureSN(WAVEGRID, flux3, unc3)
 
                     # check nans
                     nanvalues=np.sum(np.isnan(flux3)) + np.sum(np.isnan(unc3)) + np.sum(np.isnan(snr3))
